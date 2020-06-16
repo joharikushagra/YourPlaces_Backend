@@ -5,10 +5,14 @@ const mongoose = require("mongoose");
 const userRoutes = require("./routes/user-routes");
 const placesRoutes = require("./routes/places-routes");
 const HttpError = require("./models/http-error");
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 
 app.use(bodyParser.json());
+
+app.use('/uploads/images',express.static(path.join('uploads','images')));//returns images from the uploads/images directory
 
 app.use((req,res,next) => {
   res.setHeader('Access-Control-Allow-Origin','*');
@@ -27,6 +31,15 @@ app.use((req, res, next) => {
 
 //error handling middleware function
 app.use((error, req, res, next) => {
+    
+  //rollback changes when file upload gets invalid
+  if(req.file){
+    fs.unlink(req.file.path, (err)=>{
+      console.log(err);
+    })
+  }
+//===============================================
+
   if (res.headerSent) return next(error);
 
   res.status(error.code || 500);
